@@ -48,9 +48,22 @@ npm run dev --workspace @querypie/microsite-finance
 
 Create one Vercel project per app. For the finance site, use:
 
+- Vercel project: `corp-web-micro-finance`
 - Root directory: `apps/finance`
 - Build command: `npm run build`
 - Install command: `npm install`
 - Output: Next.js default
+- Automatic Vercel Git deployments: disabled in `apps/finance/vercel.json` because GitHub Actions owns deployment orchestration
+
+Finance deployments are managed by project-specific GitHub Actions workflows:
+
+- `Deploy Finance on Preview` — `.github/workflows/deploy-finance-on-preview.yml`
+- `Deploy Finance on Staging` — `.github/workflows/deploy-finance-on-staging.yml`
+- `Deploy Finance on Production` — `.github/workflows/deploy-finance-on-production.yml`
+
+The workflows use `scripts/deploy` and require:
+
+- Secret: `VERCEL_TOKEN`
+- Variable: `VERCEL_TEAM_ID`
 
 Common company links should continue to point to `https://querypie.ai`.

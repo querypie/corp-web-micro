@@ -1,0 +1,58 @@
+name: Deploy Finance on Staging
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/finance/**"
+      - "packages/**"
+      - "scripts/deploy/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy-finance-on-staging.yml"
+  workflow_dispatch:
+    inputs:
+      BRANCH:
+        description: "Branch to deploy"
+        required: true
+        default: "main"
+        type: "string"
+
+defaults:
+  run:
+    working-directory: scripts/deploy
+
+concurrency:
+  group: finance-staging-${{ github.event_name == 'push' && github.ref || inputs.BRANCH }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Finance
+    runs-on: ubuntu-latest
+    environment: Staging
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+      PROJECT_NAME: corp-web-micro-finance
+      BRANCH: ${{ github.event_name == 'push' && github.ref_name || inputs.BRANCH }}
+      TARGET_ENV: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: scripts/deploy/package-lock.json
+
+      - name: Install deploy dependencies
+        run: npm ci
+
+      - name: Run deploy script
+        run: npm run deploy
