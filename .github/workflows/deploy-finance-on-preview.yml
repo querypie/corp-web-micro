@@ -1,0 +1,57 @@
+name: Deploy Finance on Preview
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "apps/finance/**"
+      - "packages/**"
+      - "scripts/deploy/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy-finance-on-preview.yml"
+  workflow_dispatch:
+    inputs:
+      BRANCH:
+        description: "Branch to deploy"
+        required: true
+        default: "main"
+        type: "string"
+
+defaults:
+  run:
+    working-directory: scripts/deploy
+
+concurrency:
+  group: finance-preview-${{ github.event.pull_request.number || inputs.BRANCH || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Finance
+    runs-on: ubuntu-latest
+    environment: Preview
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+      PROJECT_NAME: corp-web-micro-finance
+      BRANCH: ${{ github.event_name == 'pull_request' && github.head_ref || inputs.BRANCH }}
+      TARGET_ENV: preview
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: scripts/deploy/package-lock.json
+
+      - name: Install deploy dependencies
+        run: npm ci
+
+      - name: Run deploy script
+        run: npm run deploy

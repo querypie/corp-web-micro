@@ -1,0 +1,11 @@
+{
+  "name": "corp-web-micro-deploy",
+  "type": "module",
+  "scripts": {
+    "deploy": "node index.js"
+  },
+  "dependencies": {
+    "@vercel/sdk": "^1.19.1",
+    "dotenv": "^17.2.3"
+  }
+}
